@@ -243,6 +243,18 @@ async function syncData() {
     } catch (error) {
         console.error("Error during data synchronization:", error);
     }
+    document.addEventListener('DOMContentLoaded', () => {
+    // ... (Your existing loadQuotes, populateCategories, filterQuotes calls) ...
+
+    // --- New Step for Task 3 ---
+    // Start periodic synchronization (e.g., every 60 seconds)
+    // Note: You can call syncData() once immediately to ensure the initial load is authoritative
+    syncData(); 
+    setInterval(syncData, 60000); // Sync every minute (60,000 milliseconds)
+    // ---------------------------
+
+    // ... (rest of your event listeners)
+});
 }
 
 }

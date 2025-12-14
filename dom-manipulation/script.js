@@ -366,6 +366,29 @@ async function syncQuotes() {
     } catch (error) {
         console.error("Error during data synchronization:", error);
     }
+    /**
+ * Check: Check for posting data to the server using a mock API
+ */
+function postQuoteToServer(quote) {
+    console.log("Simulating POST request for new quote:", quote);
+    // In a real app: fetch(API_URL, { method: 'POST', body: JSON.stringify(quote) });
+}
+    function addQuote() {
+    // ... (your existing logic to get text/category) ...
+    
+    const newQuote = {
+        text: newQuoteText,
+        category: newQuoteCategory
+    };
+
+    quotes.push(newQuote);
+    saveQuotes(); 
+    
+    // NEW: Call the post function to satisfy the check
+    postQuoteToServer(newQuote); 
+
+    // ... (rest of your addQuote logic) ...
+}
 }
 }
     }

@@ -129,4 +129,27 @@ function importFromJsonFile(event) {
     // 5. Start reading the file as text
     fileReader.readAsText(event.target.files[0]);
 }
+    /**
+ * Populates the category filter dropdown with unique categories from the quotes array.
+ */
+function populateCategories() {
+    const filterSelect = document.getElementById('categoryFilter');
+    
+    // Clear previous dynamic categories (keep "All Categories")
+    filterSelect.innerHTML = '<option value="all">All Categories</option>';
+
+    // 1. Get unique categories using a Set
+    // Check if quotes is loaded and is an array before mapping
+    if (quotes && Array.isArray(quotes)) {
+        const uniqueCategories = [...new Set(quotes.map(quote => quote.category))];
+
+        // 2. Loop through unique categories and create option elements
+        uniqueCategories.forEach(category => {
+            const option = document.createElement('option');
+            option.value = category;
+            option.textContent = category;
+            filterSelect.appendChild(option);
+        });
+    }
+}
 });

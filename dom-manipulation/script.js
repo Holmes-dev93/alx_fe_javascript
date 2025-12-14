@@ -1,153 +1,169 @@
-// ... (Existing code from Tasks 0, 1, and 3 - including quotes array,
-// loadQuotes, saveQuotes, populateCategories, displayFilteredQuotes, etc.) ...
+// --- Global Data Store ---
+let quotes = []; 
 
-// --- Server/Sync Constants ---
-// NOTE: JSONPlaceholder does not store state, so POST will always return success
-// without actually saving. This is sufficient for the client-side check.
-const MOCK_SERVER_URL = 'https://jsonplaceholder.typicode.com/posts?_limit=5';
-const SYNC_INTERVAL = 10000; // Check every 10 seconds (for quick testing)
+// The key used for Local Storage persistence
+const STORAGE_KEY = 'quotesData';
 
-// --- New DOM Element References (Ensure these are correctly referenced) ---
-const syncButton = document.getElementById('syncButton');
-const syncStatus = document.getElementById('syncStatus');
-const LAST_SYNC_KEY = 'lastSyncTimestamp'; 
+// --- DOM Element References (Must be defined early) ---
+const quoteDisplay = document.getElementById('quoteDisplay');
+const newQuoteButton = document.getElementById('newQuote');
 
 
-// --- New Server Functions ---
+// --- Default Data (Used only if Local Storage is empty) ---
+const defaultQuotes = [
+    { text: "The only way to do great work is to love what you do.", category: "Work" },
+    { text: "Strive not to be a success, but rather to be of value.", category: "Life" },
+    { text: "The mind is everything. What you think you become.", category: "Philosophy" },
+    { text: "Life is what happens when you're busy making other plans.", category: "Life" },
+    { text: "Get busy living or get busy dying.", category: "Motivation" }
+];
+
+
+// --- Web Storage Functions (The focus of Task 1) ---
 
 /**
- * ❌ FIX: Implements the 'Check for posting data' requirement.
- * Sends the current local 'quotes' array to the server via a POST request.
+ * Saves the current 'quotes' array to Local Storage.
+ * It converts the JS Object into a JSON string using JSON.stringify().
  */
-async function postQuotesToServer(data) {
+function saveQuotes() {
     try {
-        const response = await fetch('https://jsonplaceholder.typicode.com/posts', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(data),
-        });
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(quotes));
+        console.log("Quotes saved to Local Storage.");
+    } catch (e) {
+        console.error("Error saving quotes to Local Storage:", e);
+    }
+}
 
-        if (!response.ok) {
-            throw new Error(`POST failed! Status: ${response.status}`);
+/**
+ * Loads the quotes array from Local Storage on application startup.
+ * It converts the JSON string back to a JS Object using JSON.parse().
+ */
+function loadQuotes() {
+    const storedQuotes = localStorage.getItem(STORAGE_KEY);
+    
+    if (storedQuotes) {
+        try {
+            // Restore the data from the JSON string
+            quotes = JSON.parse(storedQuotes);
+        } catch (e) {
+            console.error("Error parsing stored quotes. Using default data.", e);
+            quotes = defaultQuotes;
+            saveQuotes(); // Save defaults in place of corrupted data
         }
-        console.log("Local data successfully posted to server simulation.");
-        return true;
-    } catch (error) {
-        console.error("Post to server failed:", error);
-        return false;
+    } else {
+        // No data found in Local Storage, initialize with defaults
+        quotes = defaultQuotes;
+        saveQuotes();
     }
 }
 
 
+// --- Core Functions (Task 0 functions MODIFIED for persistence) ---
+
 /**
- * Fetches quotes from the mock server API (PULL).
+ * Displays a random quote.
  */
-async function fetchQuotesFromServer() {
-    // ... (Existing implementation from previous response) ...
-    // [Ensure this function is present and correctly handles the GET request]
-    try {
-        const response = await fetch(MOCK_SERVER_URL);
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const serverData = await response.json();
-        
-        return serverData.map((item, index) => ({
-            text: item.title,
-            category: `Server-${item.id % 2 === 0 ? 'Tech' : 'Art'}`, 
-            source: 'server' 
-        }));
-    } catch (error) {
-        console.error("Server fetch failed:", error);
-        return [];
+function showRandomQuote() {
+    if (quotes.length === 0) {
+        quoteDisplay.innerHTML = '<p>No quotes available. Add one!</p>';
+        return;
     }
+
+    const randomIndex = Math.floor(Math.random() * quotes.length);
+    const quote = quotes[randomIndex];
+
+    // Clear and create dynamic elements
+    quoteDisplay.innerHTML = '';
+    const quoteTextElement = document.createElement('p');
+    quoteTextElement.textContent = `"${quote.text}"`;
+    quoteTextElement.classList.add('quote-text'); 
+
+    const quoteCategoryElement = document.createElement('span');
+    quoteCategoryElement.textContent = `- Category: ${quote.category}`;
+    quoteCategoryElement.classList.add('quote-category'); 
+
+    quoteDisplay.appendChild(quoteTextElement);
+    quoteDisplay.appendChild(quoteCategoryElement);
 }
 
+/**
+ * Creates and inserts the dynamic form for adding new quotes.
+ */
+function createAddQuoteForm() {
+    // Check if the form already exists
+    if (document.getElementById('addQuoteContainer')) {
+        return;
+    }
+    
+    // ... (logic to create and append the text input, category input, and button) ...
+    const container = document.createElement('div');
+    container.id = 'addQuoteContainer';
+    
+    const textInput = document.createElement('input');
+    textInput.id = 'newQuoteText';
+    textInput.type = 'text';
+    textInput.placeholder = 'Enter a new quote';
+
+    const categoryInput = document.createElement('input');
+    categoryInput.id = 'newQuoteCategory';
+    categoryInput.type = 'text';
+    categoryInput.placeholder = 'Enter quote category';
+
+    const addButton = document.createElement('button');
+    addButton.textContent = 'Add Quote';
+    addButton.addEventListener('click', addQuote);
+
+    container.appendChild(textInput);
+    container.appendChild(categoryInput);
+    container.appendChild(addButton);
+
+    // Insert the form container before the script tag
+    document.body.insertBefore(container, document.querySelector('script'));
+}
 
 /**
- * ❌ FIX: The main synchronization function (PULL and PUSH).
- * Addresses 'Check for the syncQuotes function' and 'Check for updating local storage'.
+ * Handles the logic for adding a new quote.
+ * MODIFIED to call saveQuotes().
  */
-async function syncQuotes() {
-    syncButton.disabled = true;
-    syncStatus.textContent = 'Syncing...';
-    
-    // 1. PUSH local changes to the server (POST)
-    const pushSuccess = await postQuotesToServer(quotes);
+function addQuote() {
+    const textInput = document.getElementById('newQuoteText');
+    const categoryInput = document.getElementById('newQuoteCategory');
 
-    if (!pushSuccess) {
-        syncStatus.textContent = 'Sync failed: Could not upload local changes.';
-        syncButton.disabled = false;
+    const newText = textInput.value.trim();
+    const newCategory = categoryInput.value.trim();
+
+    if (newText === '' || newCategory === '') {
+        alert('Please enter both a quote and a category.');
         return;
     }
 
-    // 2. PULL server data (GET)
-    const serverQuotes = await fetchQuotesFromServer();
-    if (serverQuotes.length === 0) {
-        syncStatus.textContent = 'Sync failed: Could not fetch server data.';
-        syncButton.disabled = false;
-        return;
-    }
-
-    // 3. CONFLICT RESOLUTION (Server Precedence)
-    let conflictResolved = false;
-    const initialLocalCount = quotes.length;
+    const newQuote = {
+        text: newText,
+        category: newCategory
+    };
+    quotes.push(newQuote);
     
-    // Filter out local quotes that match any incoming server quote text
-    const uniqueLocalQuotes = quotes.filter(lQuote => 
-        !serverQuotes.some(sQuote => sQuote.text === lQuote.text)
-    );
-    
-    // If we removed any local quotes, a conflict was resolved
-    if (uniqueLocalQuotes.length < initialLocalCount) {
-        conflictResolved = true;
-    }
-
-    // The new, merged quote set: all server quotes + unique local quotes
-    quotes = [...serverQuotes, ...uniqueLocalQuotes];
-    
-    // 4. Update Local Storage
+    // **NEW STEP 1: Save the updated array to Local Storage**
     saveQuotes();
 
-    // 5. Update UI
-    populateCategories();
-    displayFilteredQuotes(); 
-    localStorage.setItem(LAST_SYNC_KEY, Date.now());
-
-    // 6. ❌ FIX: Update UI status for conflicts
-    syncStatus.textContent = conflictResolved 
-        ? 'Sync complete. Conflicts resolved (Server data took precedence).' 
-        : `Sync successful. Total quotes: ${quotes.length}.`;
-        
-    syncButton.disabled = false;
-}
-
-/**
- * ❌ FIX: Implements the 'Check for periodically checking' requirement.
- */
-function startPeriodicSync() {
-    // Run syncQuotes immediately, then every SYNC_INTERVAL
-    syncQuotes(); // Initial run
-    setInterval(syncQuotes, SYNC_INTERVAL);
-    console.log(`Periodic sync started (every ${SYNC_INTERVAL / 1000}s).`);
+    alert(`Quote added successfully! Total quotes: ${quotes.length}`);
+    textInput.value = '';
+    categoryInput.value = '';
+    
+    showRandomQuote();
 }
 
 
-// --- Initialization (FINAL UPDATES) ---
+// --- Event Listeners and Initialization ---
 
-// Attach event listener for the Sync Button
-syncButton.addEventListener('click', syncQuotes);
-
-// ... (Existing listeners for exportButton, importFile, newQuoteButton) ...
-
-// 1. Load quotes from Local Storage
+// 1. **Load data first**
 loadQuotes();
 
-// 2. Start Periodic Syncing (which also does the first sync)
-startPeriodicSync();
+// 2. Attach event listener 
+newQuoteButton.addEventListener('click', showRandomQuote);
 
-// 3. Display initial data
-populateCategories(); 
+// 3. Display an initial quote
+showRandomQuote(); 
+
+// 4. Dynamically create the form
 createAddQuoteForm();

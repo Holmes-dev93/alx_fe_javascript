@@ -150,6 +150,49 @@ function populateCategories() {
             option.textContent = category;
             filterSelect.appendChild(option);
         });
+        /**
+ * Filters the quotes displayed and persists the user's selected filter preference.
+ */
+function filterQuotes() {
+    const selectedCategory = document.getElementById('categoryFilter').value;
+    
+    // 1. Persist the selected filter to local storage
+    localStorage.setItem('lastCategoryFilter', selectedCategory);
+
+    // Filter Logic:
+    let quotesToDisplay = quotes;
+    if (selectedCategory !== 'all') {
+        quotesToDisplay = quotes.filter(quote => quote.category === selectedCategory);
+    }
+
+    // 2. Update the quote display area to show only the filtered quotes
+    const quoteDisplay = document.getElementById('quoteDisplay');
+    quoteDisplay.innerHTML = ''; // Clear previous content
+
+    if (quotesToDisplay.length === 0) {
+        quoteDisplay.innerHTML = `<p>No quotes found in the category: ${selectedCategory}.</p>`;
+        return;
+    }
+
+    // Instead of just showing one random quote, it is best practice here to show the list
+    // or adapt showRandomQuote to work with a filtered list.
+    // For simplicity, let's update showRandomQuote to use the filtered list.
+    
+    // TEMPORARY SOLUTION: Show a random quote from the filtered list.
+    // A robust solution would display a list of all matching quotes.
+    const randomIndex = Math.floor(Math.random() * quotesToDisplay.length);
+    const quote = quotesToDisplay[randomIndex];
+
+    const figure = document.createElement('figure');
+    const blockquote = document.createElement('blockquote');
+    blockquote.textContent = `"${quote.text}"`;
+    const figcaption = document.createElement('figcaption');
+    figcaption.textContent = `Category: ${quote.category}`;
+
+    figure.appendChild(blockquote);
+    figure.appendChild(figcaption);
+    quoteDisplay.appendChild(figure);
+}
     }
 }
 });

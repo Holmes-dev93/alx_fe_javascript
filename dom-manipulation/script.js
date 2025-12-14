@@ -192,6 +192,59 @@ function filterQuotes() {
     figure.appendChild(blockquote);
     figure.appendChild(figcaption);
     quoteDisplay.appendChild(figure);
+    // Function to simulate fetching data from a server.
+// In a real application, this would use fetch(API_URL)
+async function fetchServerQuotes() {
+    // --- SERVER SIMULATION DATA ---
+    // This is the data the "server" holds. Update this manually 
+    // to test the conflict resolution/syncing logic.
+    const mockServerData = [
+        { text: "Server: The greatest glory in living lies not in never falling, but in rising every time we fall.", category: "Life" },
+        { text: "Server: The future belongs to those who believe in the beauty of their dreams.", category: "Inspiration" },
+        // ... include any quotes added locally that you want to test merging ...
+        // For simple precedence, you can just define the complete, authoritative list here.
+    ];
+
+    // Simulate network delay
+    await new Promise(resolve => setTimeout(resolve, 500)); 
+    
+    return mockServerData;
+}
+
+/**
+ * Periodically syncs local data with the simulated server data.
+ */
+async function syncData() {
+    console.log("Starting data synchronization...");
+    
+    try {
+        const serverQuotes = await fetchServerQuotes();
+        
+        // Simple string comparison to check if content has changed
+        if (JSON.stringify(serverQuotes) !== JSON.stringify(quotes)) {
+            
+            // ------------------------------------------------
+            // STEP 2 & 3: CONFLICT RESOLUTION (Server Precedence)
+            // The server's data takes precedence and overwrites local data.
+            // ------------------------------------------------
+            
+            quotes = serverQuotes;
+            saveQuotes(); // Persist the server's version to local storage
+            
+            // Update the UI to reflect the server changes
+            populateCategories(); 
+            filterQuotes(); 
+
+            alert('Data updated from server! Local changes were overwritten.');
+            console.log("Local data updated from server.");
+        } else {
+            console.log("Local and server data are in sync.");
+        }
+    } catch (error) {
+        console.error("Error during data synchronization:", error);
+    }
+}
+
 }
     }
 }

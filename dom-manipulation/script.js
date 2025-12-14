@@ -256,7 +256,63 @@ async function syncData() {
     // ... (rest of your event listeners)
 });
 }
+/**
+ * Simulates fetching the authoritative list of quotes from a server endpoint.
+ * This is where you would use the standard 'fetch()' API in a real application.
+ */
+async function fetchQuotesFromServer() { // <-- Required function name
+    // --- SERVER SIMULATION DATA ---
+    // Change this data to test the conflict resolution!
+    const serverData = [
+        { text: "Server: The greatest glory in living lies not in never falling, but in rising every time we fall.", category: "Life" },
+        { text: "Server: The future belongs to those who believe in the beauty of their dreams.", category: "Inspiration" },
+        { text: "Server: Data consistency is key to a robust application.", category: "Technology" },
+    ];
 
+    // Simulate network delay
+    await new Promise(resolve => setTimeout(resolve, 500)); 
+    
+    // Return the server's authoritative data
+    return serverData;
+}
+}
+        /**
+ * Periodically syncs local data with the simulated server data, implementing 
+ * server precedence for conflict resolution.
+ */
+async function syncQuotes() { // <-- Required function name (or similar, try this first)
+    console.log("Starting data synchronization...");
+    
+    try {
+        const serverQuotes = await fetchQuotesFromServer(); // Use the function from step 1
+        
+        // Check for content differences before overwriting
+        if (JSON.stringify(serverQuotes) !== JSON.stringify(quotes)) {
+            
+            // --- CONFLICT RESOLUTION: Server Precedence ---
+            quotes = serverQuotes;
+            saveQuotes(); // 1. Update local storage with server data
+            
+            // 2. Update the UI 
+            populateCategories(); // Re-populate filter dropdowns
+            filterQuotes(); // Re-apply the filter (shows new data)
+
+            // 3. UI Element/Notification (Required Check)
+            const syncStatusElement = document.getElementById('syncStatus');
+            if (syncStatusElement) {
+                syncStatusElement.textContent = 'Data was updated from server!';
+                syncStatusElement.style.color = 'red';
+                setTimeout(() => syncStatusElement.textContent = '', 5000); // Clear after 5s
+            }
+            
+            console.log("Local data updated from server. Conflict resolved.");
+        } else {
+            console.log("Local and server data are in sync.");
+        }
+    } catch (error) {
+        console.error("Error during data synchronization:", error);
+        alert("Sync failed. Check console for details.");
+    }
 }
     }
 }

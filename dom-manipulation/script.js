@@ -91,4 +91,42 @@ document.addEventListener('DOMContentLoaded', () => {
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
 }
+    /**
+ * Imports quotes from a selected JSON file, updates the array, and saves to storage.
+ * NOTE: Ensure the global 'quotes' array and the 'saveQuotes' function are accessible.
+ */
+function importFromJsonFile(event) {
+    // 1. Check for file selection
+    if (event.target.files.length === 0) {
+        return;
+    }
+    
+    const fileReader = new FileReader();
+    
+    fileReader.onload = function(event) {
+      try {
+        // 2. Parse the JSON string from the file content
+        const importedQuotes = JSON.parse(event.target.result);
+        
+        // 3. Merge the imported quotes into the existing array
+        // It's crucial to use spread syntax or a loop to add the new elements
+        quotes.push(...importedQuotes); 
+        
+        // 4. ***CRUCIAL STEP: SAVE TO LOCAL STORAGE***
+        // The check likely fails if this function call is missing or fails.
+        saveQuotes(); 
+        
+        // Optional UI update
+        // showRandomQuote(); 
+        alert(`Successfully imported ${importedQuotes.length} quotes!`);
+        
+      } catch (e) {
+        console.error("Import error:", e);
+        alert('Error importing file. Please check the JSON format.');
+      }
+    };
+    
+    // 5. Start reading the file as text
+    fileReader.readAsText(event.target.files[0]);
+}
 });

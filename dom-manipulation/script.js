@@ -73,4 +73,22 @@ document.addEventListener('DOMContentLoaded', () => {
     addQuoteBtn.addEventListener('click', addQuote); 
     
     showRandomQuote();
+    function exportToJsonFile() {
+    // Logic to create the JSON string (quotes must be defined globally)
+    const data = JSON.stringify(quotes, null, 2);
+    
+    // Logic to create the Blob and trigger download
+    const blob = new Blob([data], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'quotes_export.json'; 
+    
+    document.body.appendChild(a);
+    a.click();
+    
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+}
 });

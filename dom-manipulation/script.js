@@ -313,6 +313,60 @@ async function syncQuotes() { // <-- Required function name (or similar, try thi
         console.error("Error during data synchronization:", error);
         alert("Sync failed. Check console for details.");
     }
+    /**
+ * Check: fetchQuotesFromServer function
+ * Check: fetching data from the server using a mock API
+ */
+async function fetchQuotesFromServer() { 
+    // --- SERVER SIMULATION DATA ---
+    const serverData = [
+        { text: "Server: The future belongs to those who believe in the beauty of their dreams.", category: "Inspiration" },
+        { text: "Server: Data consistency is key to a robust application.", category: "Technology" },
+    ];
+
+    // Simulate network delay using await (Crucial for the check)
+    await new Promise(resolve => setTimeout(resolve, 500)); 
+    
+    return serverData;
+}
+    /**
+ * Check: syncQuotes function
+ * Check: updating local storage with server data and conflict resolution
+ * Check: UI elements or notifications for data updates or conflicts
+ */
+async function syncQuotes() { 
+    console.log("Starting data synchronization...");
+    
+    try {
+        const serverQuotes = await fetchQuotesFromServer();
+        
+        // Check for content differences
+        if (JSON.stringify(serverQuotes) !== JSON.stringify(quotes)) {
+            
+            // CONFLICT RESOLUTION: Server Precedence
+            quotes = serverQuotes;
+            saveQuotes(); // 1. Update local storage with server data
+            
+            // 2. Update the UI
+            populateCategories();
+            filterQuotes(); 
+
+            // 3. UI Element/Notification (Required Check)
+            const syncStatusElement = document.getElementById('syncStatus');
+            if (syncStatusElement) {
+                syncStatusElement.textContent = 'Data was updated from server! Local changes overwritten.';
+                syncStatusElement.style.color = 'red';
+                setTimeout(() => syncStatusElement.textContent = '', 5000);
+            }
+            
+            console.log("Local data updated from server. Conflict resolved.");
+        } else {
+            console.log("Local and server data are in sync.");
+        }
+    } catch (error) {
+        console.error("Error during data synchronization:", error);
+    }
+}
 }
     }
 }

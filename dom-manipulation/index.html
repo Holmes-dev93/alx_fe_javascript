@@ -50,7 +50,19 @@
       onchange="importFromJsonFile(event)" 
     />
   </div>
-
+<div>
+    <button onclick="exportToJsonFile()">Export Quotes (JSON)</button>
+    
+    <br><br>
+    <label for="importFile">Import Quotes from JSON File:</label>
+    
+    <input 
+      type="file" 
+      id="importFile" 
+      accept=".json" 
+      onchange="importFromJsonFile(event)" 
+    />
+</div>
   <hr>
 
   <script src="script.js"></script>
